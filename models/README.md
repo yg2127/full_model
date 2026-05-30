@@ -22,7 +22,8 @@ model4 분류기 (추론)
 | `facemesh/` | mediapipe tflite | clean 좌표 GT (occgateRAW 정상부위) | ✅ |
 | `hgnet_phase3a/`, `hgnet_phase3a_v2/` | HGNet best/v2 | (model4 미사용 — 여분/실험용) | ⚠️ v3 아님 |
 | `codebook/` | VQ-VAE codebook(phase1) | (orformer best.pt 에 포함 — 여분) | ⚠️ |
-| `occ_cnn_retrain_mine/` | 내가 재학습한 occ CNN | **model4 의 occ_pred 와 무관!** | ❌ 아래 주의 |
+| `occ_cnn_step9_hyi/` | **VisibilityResNet18** (hyi, 4-label visibility) best.pt+생성코드 | **model4 의 x_occ 실제 생성** | ✅✅ |
+| `occ_cnn_retrain_mine/` | 내가 재학습한 다른 occ CNN | (model4 무관) | ❌ |
 
 ## ⚠️ occ CNN 주의 (중요)
 

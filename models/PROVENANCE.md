@@ -38,12 +38,15 @@ ckpt 메타(`args`/`note`) + 학습 스크립트에서 역추적한 기록. **mo
 - **설정(ckpt 내 config 저장됨)**: fusion=task_gated_late, face=occgateRAW(npz_swap), occ=`_occ_pred`, loss α 1.0/0.5/0.3/0.2, best_score 0.3/0.45/0.15/0.1 → best epoch 10, best_score 0.784
 - 원본: `AblationB/results/model4_occgateRAW_taskGated_occCNN_seed42/best.pt`
 
-## 7. occ CNN (model4 의 x_occ 가림확률 생성)  ❗ **권한거부 — 미포함**
-- **실제 ckpt**: `/home/hyi/Code/Step9_extract_crop_npz/best.pt`  (hyi 홈, 권한거부)
-- **근거**: model4 occ 소스 = `_occ_pred/face_npz_to_occ_npz.json`; 그 캐시의 `occ_generation_summary.json` → `"ckpt": "/home/hyi/Code/Step9_extract_crop_npz/best.pt"`
-- **생성코드(Step9)**: `/home/hyi/Code/Step9_extract_crop_npz/` (권한거부)
-- **모델정의(접근가능)**: `scuppy/external_scripts/hyi_masking/Step3_full_dir/3_task_train.py` 의 `TinyRegionCNN`
-- model4 추론 시엔 이 ckpt 로 만든 `_occ_pred` 캐시(npz)를 읽음(분류기는 occ CNN 미로드).
+## 7. occ CNN — `models/occ_cnn_step9_hyi/best.pt`  ✅✅ **model4 의 x_occ(가림확률) 생성. 이제 포함됨**
+- **모델**: `VisibilityResNet18` (torchvision resnet18, conv1→1채널 gray 256입력, fc→**4 logit**). 정의는 `models/occ_cnn_step9_hyi/making_crop_npz.py:109`.
+- **라벨(4)**: `left_eye_visible / right_eye_visible / nose_visible / mouth_visible` (가시성; sigmoid → x_occ)
+- **학습설정(config)**: image_size 256, batch 32, lr 1e-4, weight_decay 1e-4, threshold 0.5, use_pretrained False → **epoch 39, score 0.9517**
+- **생성코드**: `models/occ_cnn_step9_hyi/making_crop_npz.py` (face crop → VisibilityResNet18 → sigmoid → `_occ.npz`). VIS_CNN_CKPT=이 best.pt.
+- **원본**: `/home/hyi/Code/Step9_extract_crop_npz/best.pt` (cchun sudo 로 복사). ckpt 134MB(optimizer 포함).
+- **근거**: model4 occ 소스 = `_occ_pred/face_npz_to_occ_npz.json`; 그 캐시 `occ_generation_summary.json` → `ckpt: /home/hyi/Code/Step9_extract_crop_npz/best.pt`
+- ※ 정정: 이전엔 TinyRegionCNN 으로 잘못 기재했었음 — 실제는 **ResNet18(VisibilityResNet18, 4-label visibility)**.
+- model4 추론 시엔 이 모델이 만든 `_occ_pred` 캐시(npz)를 읽음(분류기는 occ CNN 미로드).
 
 ## 8. occ CNN (내 재학습본) — `models/occ_cnn_retrain_mine/best.pt`  ❌ **model4 무관**
 - **학습코드**: `pipeline/train_occ_cnn.py`
@@ -60,4 +63,4 @@ ckpt 메타(`args`/`note`) + 학습 스크립트에서 역추적한 기록. **mo
 | HGNet **v3** | `landmark/scripts/train_phase3_hgnet.py` (run_phase3a_478_v3.sh) | ✅ occgateRAW 좌표 |
 | ORFormer | `landmark/scripts/train_phase2_orformer.py` | ✅ HGNet reference |
 | facemesh (mediapipe) | (pip, 학습 아님) | ✅ clean GT |
-| occ CNN **hyi Step9** | `/home/hyi/Code/Step9_extract_crop_npz/` (권한거부) | ✅ x_occ (occ_pred 캐시) |
+| occ CNN **VisibilityResNet18** (hyi Step9) | `models/occ_cnn_step9_hyi/making_crop_npz.py` (ckpt 포함) | ✅ x_occ (occ_pred 캐시) |
