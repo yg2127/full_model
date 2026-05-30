@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Landmark + occlusion inference 데모 — 번들 체크포인트(checkpoints/) 사용.
+"""Landmark + occlusion inference 데모 — 번들 모델(models/) 사용.
 
 face crop 이미지 → ORFormer+HGNet 으로 478 landmark 복원 + occ CNN region 가림 예측.
 이 저장소의 핵심 기여(가림 강건 좌표 복원)를 단독 실행 가능하게 보여준다.
@@ -47,7 +47,7 @@ def load_landmark_models(hgnet_ckpt=None):
     orf.load_state_dict(torch.load(CKPT / "orformer/best.pt", map_location=DEV, weights_only=False)["model_state_dict"], strict=False)
     hg = IntergrationStackedHGNet(classes_num=[ds.NUM_POINT, ds.NUM_EDGE, ds.NUM_POINT],
                                   edge_info=[list(x) for x in ds.EDGE_INFO], nstack=4).to(DEV).eval()
-    ck = torch.load(hgnet_ckpt or (CKPT / "hgnet_phase3a/best.pt"), map_location=DEV, weights_only=False)
+    ck = torch.load(hgnet_ckpt or (CKPT / "hgnet_phase3a_v3/best.pt"), map_location=DEV, weights_only=False)
     hg.load_state_dict(ck["hgnet_state_dict"] if "hgnet_state_dict" in ck else ck, strict=True)
     return orf, hg
 
@@ -63,13 +63,13 @@ def infer_landmarks(crop_gray_112, orf, hg):
 
 
 def load_occ_cnn():
-    """region occlusion CNN (TinyRegionCNN) — checkpoints/occ_cnn/best.pt."""
+    """region occlusion CNN (TinyRegionCNN) — models/occ_cnn_retrain_mine/best.pt (※ model4 occ_pred 와 무관)."""
     code = "/data/shared/scuppy/external_scripts/hyi_masking/Step3_full_dir/3_task_train.py"
     if not Path(code).exists():
         return None
     spec = ilu.spec_from_file_location("t3", code); t3 = ilu.module_from_spec(spec); spec.loader.exec_module(t3)
     m = t3.TinyRegionCNN(3).to(DEV).eval()
-    ck = torch.load(CKPT / "occ_cnn/best.pt", map_location=DEV, weights_only=False)
+    ck = torch.load(CKPT / "occ_cnn_retrain_mine/best.pt", map_location=DEV, weights_only=False)
     m.load_state_dict(ck["model_state_dict"]); return m
 
 

@@ -104,9 +104,9 @@ PYTHONPATH=$(pwd):$(pwd)/configs python src/training/train.py \
 |---|---|
 | ORFormer 라이브러리(vendor) | `/data/shared/orformer/vendor` (PYTHONPATH 추가) |
 | ORFormer 가중치 | `pretrain_v4/artifacts/phase2_orformer_fixed/best.pt` |
-| HGNet 가중치 | `pretrain_v4/artifacts/phase3a_hgnet_478/best.pt` |
+| HGNet 가중치 (model4=**v3**) | `pretrain_v4/artifacts/phase3a_hgnet_478_v3/best.pt` |
 | HGNet fixedmask finetune | `scuppy/yg/hgnet_fixedmask_ft/best.pt` |
-| occ CNN 가중치 | `scuppy/yg/occ_cnn_v1/best.pt` |
+| occ CNN (model4 occ_pred 생성) | **hyi** `/home/hyi/Code/Step9_extract_crop_npz/best.pt` (권한거부·미포함) |
 | DMD 원본 영상/랜드마크 | `/data/shared/DMD`, `/data/shared/DMD_landmarks` |
 | 가림 데이터셋 | `/data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask` |
 | fixed split manifest | `/data/shared/scuppy/hyi/fixed_splits/dms_clean_masked_fixed_items_v1.json` |
