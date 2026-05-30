@@ -27,6 +27,7 @@ wandb/
 .DS_Store
 
 
-# 모델 가중치 (로컬 전용, 미추적)
-models/
+# 모델 가중치(바이너리)만 미추적 — models/ 내 .md(README/PROVENANCE)는 추적
+models/**/*.pt
+models/**/*.tflite
 *.tflite
