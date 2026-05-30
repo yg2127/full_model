@@ -1,0 +1,96 @@
+[2026-05-30 20:51:06] INFO v5_train | config=configs/generated/model4_occgateRAW_taskGated_occCNN_seed42.yaml
+[2026-05-30 20:51:06] INFO v5_train | device=cuda
+[2026-05-30 20:51:06] INFO v5_train | distraction discovered: 153 (missing_counts={'face': 0, 'face5pt': 0, 'ann': 0})
+[2026-05-30 20:51:06] INFO v5_train | gaze discovered: 29 (missing_counts={'face': 0, 'face5pt': 0, 'ann': 0})
+[2026-05-30 20:51:06] INFO v5_train | discover_all: total=182 (distraction=153, gaze=29)
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest] loaded=/data/shared/scuppy/hyi/fixed_splits/dms_clean_masked_fixed_items_v1.json
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest] split_name=dms_clean_masked_fixed_items_v1 version=1
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] discovered videos=182
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] discovered templates=182
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] template prefix examples=['gA_1_s1_2019-03-08T09;31;15+01;00', 'gA_1_s2_2019-03-08T09;21;03+01;00', 'gA_1_s3_2019-03-14T14;31;08+01;00', 'gA_1_s4_2019-03-22T11;49;58+01;00', 'gA_2_s1_2019-03-08T10;01;44+01;00']
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] train: specs=206 videos=206 missing_template=0 missing_path=0 variants=['clean', 'masked']
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] train example: variant=clean source=distraction subject_key=gA_1 session=s1 prefix=gA_1_s1_2019-03-08T09;31;15+01;00 face_npz=/data/shared/DMD_landmarks/facemesh/distraction/dmd/gA/1/s1/gA_1_s1_2019-03-08T09;31;15+01;00_ir_face_facemesh.npz face5pt_npz=/data/shared/DMD_landmarks/yolo_face/distraction/dmd/gA/1/s1/gA_1_s1_2019-03-08T09;31;15+01;00_ir_face_face5pt.npz
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] val: specs=48 videos=48 missing_template=0 missing_path=0 variants=['clean', 'masked']
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] val example: variant=clean source=distraction subject_key=gA_4 session=s1 prefix=gA_4_s1_2019-03-13T10;36;15+01;00 face_npz=/data/shared/DMD_landmarks/facemesh/distraction/dmd/gA/4/s1/gA_4_s1_2019-03-13T10;36;15+01;00_ir_face_facemesh.npz face5pt_npz=/data/shared/DMD_landmarks/yolo_face/distraction/dmd/gA/4/s1/gA_4_s1_2019-03-13T10;36;15+01;00_ir_face_face5pt.npz
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] test: specs=52 videos=52 missing_template=0 missing_path=0 variants=['clean']
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] test example: variant=clean source=distraction subject_key=gA_5 session=s1 prefix=gA_5_s1_2019-03-08T10;57;00+01;00 face_npz=/data/shared/DMD_landmarks/facemesh/distraction/dmd/gA/5/s1/gA_5_s1_2019-03-08T10;57;00+01;00_ir_face_facemesh.npz face5pt_npz=/data/shared/DMD_landmarks/yolo_face/distraction/dmd/gA/5/s1/gA_5_s1_2019-03-08T10;57;00+01;00_ir_face_face5pt.npz
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] test: specs=52 videos=52 missing_template=0 missing_path=0 variants=['masked']
+[2026-05-30 20:51:06] INFO v5_train | [fixed manifest/template] test example: variant=masked source=distraction subject_key=gA_5 session=s1 prefix=gA_5_s1_2019-03-08T10;57;00+01;00 face_npz=/data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask_yolo_face_facemesh_canonical/facemesh/distraction/dmd/gA/5/s1/gA_5_s1_2019-03-08T10;57;00+01;00_ir_face_facemesh.npz face5pt_npz=/data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask_yolo_face_facemesh_canonical/yolo_face/distraction/dmd/gA/5/s1/gA_5_s1_2019-03-08T10;57;00+01;00_ir_face_face5pt.npz
+[2026-05-30 20:51:06] INFO v5_train | [variant videos] train: count={'clean': 103, 'masked': 103} ratio={'clean': 0.5, 'masked': 0.5} total=206
+[2026-05-30 20:51:06] INFO v5_train | [variant videos] val: count={'clean': 24, 'masked': 24} ratio={'clean': 0.5, 'masked': 0.5} total=48
+[2026-05-30 20:51:06] INFO v5_train | [variant videos] test_clean: count={'clean': 52} ratio={'clean': 1.0} total=52
+[2026-05-30 20:51:06] INFO v5_train | [variant videos] test_masked: count={'masked': 52} ratio={'masked': 1.0} total=52
+[2026-05-30 20:51:13] INFO v5_train | clips built: distraction=39333 gaze=2728 out_of_range=89 dropped_unclassified=1048
+[2026-05-30 20:51:13] INFO v5_train |   action dist: {0: 6499, 1: 2706, 2: 2632, 3: 7428, 4: 7954, 5: 1470, 6: 1970, 7: 5248, 8: 564, 9: 2554, 10: 308}
+[2026-05-30 20:51:13] INFO v5_train |   gaze_fine:   {0: 288, 1: 230, 2: 466, 3: 278, 4: 292, 5: 256, 6: 280, 7: 286, 8: 352}
+[2026-05-30 20:51:13] INFO v5_train |   hands:       {0: 6233, 1: 21889, 2: 11270, 3: 645}
+[2026-05-30 20:51:13] INFO v5_train |   talk:        {0: 28388, 1: 10945}
+[2026-05-30 20:51:15] INFO v5_train | clips built: distraction=8435 gaze=886 out_of_range=73 dropped_unclassified=274
+[2026-05-30 20:51:15] INFO v5_train |   action dist: {0: 1315, 1: 676, 2: 686, 3: 1562, 4: 1676, 5: 328, 6: 388, 7: 942, 8: 106, 9: 628, 10: 128}
+[2026-05-30 20:51:15] INFO v5_train |   gaze_fine:   {0: 128, 1: 84, 2: 108, 3: 66, 4: 106, 5: 102, 6: 90, 7: 96, 8: 106}
+[2026-05-30 20:51:15] INFO v5_train |   hands:       {0: 1304, 1: 4652, 2: 2466, 3: 341}
+[2026-05-30 20:51:15] INFO v5_train |   talk:        {0: 6095, 1: 2340}
+[2026-05-30 20:51:17] INFO v5_train | clips built: distraction=9729 gaze=587 out_of_range=17 dropped_unclassified=366
+[2026-05-30 20:51:17] INFO v5_train |   action dist: {0: 1484, 1: 799, 2: 823, 3: 1771, 4: 1877, 5: 294, 6: 504, 7: 1320, 8: 126, 9: 661, 10: 70}
+[2026-05-30 20:51:17] INFO v5_train |   gaze_fine:   {0: 56, 1: 53, 2: 109, 3: 60, 4: 62, 5: 62, 6: 60, 7: 58, 8: 67}
+[2026-05-30 20:51:17] INFO v5_train |   hands:       {0: 1371, 1: 5588, 2: 2870, 3: 52}
+[2026-05-30 20:51:17] INFO v5_train |   talk:        {0: 7257, 1: 2472}
+[2026-05-30 20:51:19] INFO v5_train | clips built: distraction=9729 gaze=587 out_of_range=17 dropped_unclassified=366
+[2026-05-30 20:51:19] INFO v5_train |   action dist: {0: 1484, 1: 799, 2: 823, 3: 1771, 4: 1877, 5: 294, 6: 504, 7: 1320, 8: 126, 9: 661, 10: 70}
+[2026-05-30 20:51:19] INFO v5_train |   gaze_fine:   {0: 56, 1: 53, 2: 109, 3: 60, 4: 62, 5: 62, 6: 60, 7: 58, 8: 67}
+[2026-05-30 20:51:19] INFO v5_train |   hands:       {0: 1371, 1: 5588, 2: 2870, 3: 52}
+[2026-05-30 20:51:19] INFO v5_train |   talk:        {0: 7257, 1: 2472}
+[2026-05-30 20:51:19] INFO v5_train | [variant clips] train: count={'clean': 21025, 'masked': 21036} ratio={'clean': 0.4999, 'masked': 0.5001} total=42061
+[2026-05-30 20:51:19] INFO v5_train | [debug clip_id] train: total=42061 unique=42061 duplicate_ids=0
+[2026-05-30 20:51:19] INFO v5_train | [variant clips] val: count={'clean': 4659, 'masked': 4662} ratio={'clean': 0.4998, 'masked': 0.5002} total=9321
+[2026-05-30 20:51:19] INFO v5_train | [debug clip_id] val: total=9321 unique=9321 duplicate_ids=0
+[2026-05-30 20:51:19] INFO v5_train | [variant clips] test_clean: count={'clean': 10316} ratio={'clean': 1.0} total=10316
+[2026-05-30 20:51:19] INFO v5_train | [debug clip_id] test_clean: total=10316 unique=10316 duplicate_ids=0
+[2026-05-30 20:51:19] INFO v5_train | [variant clips] test_masked: count={'masked': 10316} ratio={'masked': 1.0} total=10316
+[2026-05-30 20:51:19] INFO v5_train | [debug clip_id] test_masked: total=10316 unique=10316 duplicate_ids=0
+[2026-05-30 20:52:36] INFO v5_train | preload train: kept=62186 clips_all_skipped=10882 skipped_windows={'pose_quality': 4, 'face_quality': 21932}
+[2026-05-30 20:52:52] INFO v5_train | preload val: kept=13362 clips_all_skipped=2613 skipped_windows={'pose_quality': 0, 'face_quality': 5280}
+[2026-05-30 20:53:15] INFO v5_train | preload test_clean: kept=19853 clips_all_skipped=378 skipped_windows={'pose_quality': 2, 'face_quality': 777}
+[2026-05-30 20:53:31] INFO v5_train | preload test_masked: kept=12561 clips_all_skipped=3993 skipped_windows={'pose_quality': 2, 'face_quality': 8069}
+[2026-05-30 20:53:31] INFO v5_train | [variant windows] train: count={'clean': 37419, 'masked': 24767} ratio={'clean': 0.6017, 'masked': 0.3983} total=62186
+[2026-05-30 20:53:31] INFO v5_train | [variant windows] val: count={'clean': 7764, 'masked': 5598} ratio={'clean': 0.5811, 'masked': 0.4189} total=13362
+[2026-05-30 20:53:31] INFO v5_train | [variant windows] test_clean: count={'clean': 19853} ratio={'clean': 1.0} total=19853
+[2026-05-30 20:53:31] INFO v5_train | [variant windows] test_masked: count={'masked': 12561} ratio={'masked': 1.0} total=12561
+[2026-05-30 20:53:31] INFO v5_train | model params=2.134M fusion=task_gated_late face_mode=facemesh_full face_encoder=region_pool loader_face_V=478 model_face_V=10 occ_enabled=True occ_dim=5
+[2026-05-30 20:54:59] INFO v5_train | [1/50] lr=7.50e-04 train_loss=1.1323 val_loss=0.4511 | action=0.9174 gaze=0.6160 hands=0.8679 talk=0.7548 | score=0.7581
+[2026-05-30 20:54:59] INFO v5_train | [best] epoch=1 score=0.7581
+[2026-05-30 20:56:24] INFO v5_train | [2/50] lr=7.50e-04 train_loss=0.6573 val_loss=0.4729 | action=0.9079 gaze=0.5224 hands=0.8999 talk=0.7488 | score=0.7173
+[2026-05-30 20:57:46] INFO v5_train | [3/50] lr=7.50e-04 train_loss=0.4960 val_loss=0.4827 | action=0.8976 gaze=0.6222 hands=0.9119 talk=0.7628 | score=0.7624
+[2026-05-30 20:57:46] INFO v5_train | [best] epoch=3 score=0.7624
+[2026-05-30 20:59:09] INFO v5_train | [4/50] lr=7.50e-04 train_loss=0.4187 val_loss=0.4253 | action=0.9207 gaze=0.5593 hands=0.9002 talk=0.7650 | score=0.7394
+[2026-05-30 21:00:36] INFO v5_train | [5/50] lr=7.50e-04 train_loss=0.3620 val_loss=0.4615 | action=0.9228 gaze=0.6365 hands=0.8382 talk=0.7606 | score=0.7650
+[2026-05-30 21:00:36] INFO v5_train | [best] epoch=5 score=0.7650
+[2026-05-30 21:02:02] INFO v5_train | [6/50] lr=7.50e-04 train_loss=0.3026 val_loss=0.4947 | action=0.9171 gaze=0.6394 hands=0.8570 talk=0.7586 | score=0.7673
+[2026-05-30 21:02:02] INFO v5_train | [best] epoch=6 score=0.7673
+[2026-05-30 21:03:28] INFO v5_train | [7/50] lr=7.50e-04 train_loss=0.2839 val_loss=0.4687 | action=0.9226 gaze=0.6426 hands=0.8608 talk=0.7669 | score=0.7717
+[2026-05-30 21:03:28] INFO v5_train | [best] epoch=7 score=0.7717
+[2026-05-30 21:04:53] INFO v5_train | [8/50] lr=7.50e-04 train_loss=0.2594 val_loss=0.5652 | action=0.9006 gaze=0.6072 hands=0.8235 talk=0.7710 | score=0.7440
+[2026-05-30 21:06:16] INFO v5_train | [9/50] lr=7.50e-04 train_loss=0.2278 val_loss=0.6224 | action=0.9011 gaze=0.5628 hands=0.8702 talk=0.7686 | score=0.7310
+[2026-05-30 21:07:42] INFO v5_train | [10/50] lr=7.50e-04 train_loss=0.2176 val_loss=0.5040 | action=0.9293 gaze=0.6481 hands=0.9081 talk=0.7759 | score=0.7842
+[2026-05-30 21:07:42] INFO v5_train | [best] epoch=10 score=0.7842
+[2026-05-30 21:09:04] INFO v5_train | [11/50] lr=7.50e-04 train_loss=0.1994 val_loss=0.5005 | action=0.9378 gaze=0.6332 hands=0.7694 talk=0.7658 | score=0.7583
+[2026-05-30 21:10:28] INFO v5_train | [12/50] lr=7.50e-04 train_loss=0.1960 val_loss=0.6249 | action=0.9090 gaze=0.6073 hands=0.7875 talk=0.7477 | score=0.7389
+[2026-05-30 21:11:54] INFO v5_train | [13/50] lr=7.50e-04 train_loss=0.1784 val_loss=0.6365 | action=0.9121 gaze=0.5935 hands=0.8659 talk=0.7481 | score=0.7454
+[2026-05-30 21:13:17] INFO v5_train | [14/50] lr=3.75e-04 train_loss=0.1630 val_loss=0.6129 | action=0.9137 gaze=0.6132 hands=0.8732 talk=0.7589 | score=0.7569
+[2026-05-30 21:14:41] INFO v5_train | [15/50] lr=3.75e-04 train_loss=0.1167 val_loss=0.6293 | action=0.9253 gaze=0.6017 hands=0.8136 talk=0.7446 | score=0.7448
+[2026-05-30 21:14:41] INFO v5_train | [early stop] no improve 5 epochs
+[2026-05-30 21:14:41] INFO v5_train | ==== training done best_epoch=10 best_score=0.7842 ====
+[2026-05-30 21:14:55] INFO v5_train | [test_clean action] c_f1=0.8874 c_acc=0.9336 w_f1=0.8867 w_acc=0.9326
+[2026-05-30 21:14:55] INFO v5_train | [test_clean gaze] c_f1=0.5999 c_acc=0.6304 w_f1=0.5994 w_acc=0.6290
+[2026-05-30 21:14:55] INFO v5_train | [test_clean hands] c_f1=0.7139 c_acc=0.9497 w_f1=0.7139 w_acc=0.9497
+[2026-05-30 21:14:55] INFO v5_train | [test_clean talk] c_f1=0.7486 c_acc=0.7771 w_f1=0.7485 w_acc=0.7769
+[2026-05-30 21:14:55] INFO v5_train | [test_clean gaze_bin(dist)] window acc=0.7021 f1=0.6230 | clip acc=0.6946 f1=0.6186 | n=18826 (front=15710, not_front=3116)
+[2026-05-30 21:15:06] INFO v5_train | [test_masked action] c_f1=0.8642 c_acc=0.9202 w_f1=0.8650 w_acc=0.9200
+[2026-05-30 21:15:06] INFO v5_train | [test_masked gaze] c_f1=0.5458 c_acc=0.5909 w_f1=0.5454 w_acc=0.5901
+[2026-05-30 21:15:06] INFO v5_train | [test_masked hands] c_f1=0.7045 c_acc=0.9450 w_f1=0.7046 w_acc=0.9448
+[2026-05-30 21:15:06] INFO v5_train | [test_masked talk] c_f1=0.7446 c_acc=0.7737 w_f1=0.7454 w_acc=0.7742
+[2026-05-30 21:15:06] INFO v5_train | [test_masked gaze_bin(dist)] window acc=0.6588 f1=0.5926 | clip acc=0.6509 f1=0.5882 | n=11817 (front=9893, not_front=1924)
+[2026-05-30 21:15:06] INFO v5_train | [latency] 1.59 ms/window
+[2026-05-30 21:15:06] INFO v5_train | [done] summary -> /data/shared/scuppy/yg/Ablation/AblationB/results/model4_occgateRAW_taskGated_occCNN_seed42/summary.json
+[2026-05-30 21:15:06] WARNING v5_train | [finalize] REPORT.md 생성 실패: 'test_per_head'
+[2026-05-30 21:15:06] INFO v5_train | [finalize] results → /data/shared/scuppy/hyi/Ablation/AblationB/results/model4_occgateRAW_taskGated_occCNN_seed42  (10 files)

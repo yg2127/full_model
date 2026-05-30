@@ -1,0 +1,48 @@
+# Ablation pretrain_v4 — base config (모든 variant 가 상속)
+
+# Fixed split (hyi)
+split_json: /data/shared/scuppy/hyi/fixed_splits/dms_clean_masked_fixed_items_v1.json
+
+# Data root
+clean_face_root:  /data/shared/DMD_landmarks/facemesh
+masked_face_root: /data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask_yolo_face_facemesh_canonical/facemesh
+pose_root:        /data/shared/DMD_landmarks/yolo_pose
+face5pt_root:     /data/shared/DMD_landmarks/yolo_face
+
+# OCC map (hyi 의 mediapipe 7-fusion 용)
+occ_map_json: /data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask_occ_pred_mediapipe/face_npz_to_occ_npz.json
+
+# HGNet cache (Step 1 으로 생성 — hyi split 의 각 face_path 옆에 *_hgnet478.npz)
+hgnet_orformer_ckpt: /home/yg/fusion/pretrain_v4/artifacts/phase2_orformer_fixed/best.pt
+hgnet_hgnet_ckpt:    /home/yg/fusion/pretrain_v4/artifacts/phase3a_hgnet_478_v3/best.pt
+hgnet_cache_suffix:  _hgnet478.npz
+
+# Test 평가 (clean / masked 분리, paired_drop 측정 필수)
+test_clean_item_key:  test_clean_paired
+test_masked_item_key: test_masked
+
+# Model defaults (variant 가 override)
+model:
+  face_source: mediapipe          # mediapipe | hgnet
+  fusion:
+    kind: concat                  # concat | concat_condition | task_gated_late | explicit_region_mask_gate | occ_attention_bias | task_region_gated_late | task_region_scalar_gated_late
+    occ_enabled: false
+  occ_aux_loss: false             # 3-region BCE on occ_label_vector (proposed_region_aware 시 True)
+
+# 4-head multi-task (V1.2 와 동일)
+heads:
+  action: 11
+  gaze_fine: 9
+  gaze_weak: 2
+  hands: 4
+  talk: 2
+
+# Train
+batch_size: 16
+epoch: 50
+lr: 1e-3
+T_0: 5
+T_mult: 2
+workers: 8
+early_stop_patience: 15
+seed: 42

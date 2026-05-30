@@ -1,0 +1,116 @@
+# Ablation variant — Core 5 fusion × 2 face_source = 10 variant
+# 각 variant 는 3 seed (42, 43, 44) 로 학습 → 총 30 run
+
+variants:
+
+  # =========================================
+  # Face source = MEDIAPIPE (hyi 의 7개 중 핵심 5개와 동등 — replication / 비교 baseline)
+  # =========================================
+  mp_no_occ:
+    face_source: mediapipe
+    fusion:
+      kind: concat
+      occ_enabled: false
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "mediapipe baseline (no OCC). hyi 의 no_occ_original 와 동등."
+
+  mp_concat_condition:
+    face_source: mediapipe
+    fusion:
+      kind: concat_condition
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "mediapipe + OCC feature-level condition."
+
+  mp_task_gated_late:
+    face_source: mediapipe
+    fusion:
+      kind: task_gated_late
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "mediapipe + task별 pose-face reliability gate."
+
+  mp_explicit_region_mask_gate:
+    face_source: mediapipe
+    fusion:
+      kind: explicit_region_mask_gate
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "mediapipe + region gate × OCC visibility mask."
+
+  mp_occ_attention_bias:
+    face_source: mediapipe
+    fusion:
+      kind: occ_attention_bias
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "mediapipe + OCC attention bias."
+
+  # =========================================
+  # Face source = HGNET (우리 pretrain_v4 의 dense 478, 가린 frame 도 출력)
+  # =========================================
+  hg_no_occ:
+    face_source: hgnet
+    fusion:
+      kind: concat
+      occ_enabled: false
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "HGNet dense baseline (no OCC). 우리의 'just dense landmark' 의 효과 측정."
+
+  hg_concat_condition:
+    face_source: hgnet
+    fusion:
+      kind: concat_condition
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "HGNet + OCC feature-level condition."
+
+  hg_task_gated_late:
+    face_source: hgnet
+    fusion:
+      kind: task_gated_late
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "HGNet + task별 pose-face reliability gate."
+
+  hg_explicit_region_mask_gate:
+    face_source: hgnet
+    fusion:
+      kind: explicit_region_mask_gate
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "HGNet + region gate × OCC visibility mask."
+
+  hg_occ_attention_bias:
+    face_source: hgnet
+    fusion:
+      kind: occ_attention_bias
+      occ_enabled: true
+    occ_aux_loss: false
+    train_item_key: train_clean_masked_1to1
+    val_item_key:   val_clean_masked_1to1
+    description: "HGNet + OCC attention bias."
+
+# 비고:
+# - hyi 가 사용한 OCC map: /data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask_occ_pred_mediapipe/face_npz_to_occ_npz.json
+#   (mediapipe crop 기준). hg 쪽도 동일 OCC map 사용 (가림 region/appearance 정보는 face_source 와 독립)
+# - hyi 의 task_region_gated_late / task_region_scalar_gated_late 는 core 5에서 제외 (V5 region+scalar 구조 의존성).
+#   필요 시 v6/v7 로 별도 sweep.
