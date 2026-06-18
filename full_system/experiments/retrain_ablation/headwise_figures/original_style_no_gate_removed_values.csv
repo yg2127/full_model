@@ -1,0 +1,6 @@
+variant,test_clean_action,test_clean_gaze,test_clean_hands,test_clean_talk,test_masked_action,test_masked_gaze,test_masked_hands,test_masked_talk
+full,0.8531,0.6355,0.7041,0.7515,0.846,0.5831,0.6987,0.7476
+no_body,0.3787,0.5668,0.3855,0.5588,0.2532,0.429,0.3364,0.5296
+no_face,0.8861,0.454,0.7106,0.7428,0.8798,0.3813,0.7142,0.7467
+no_occ,0.8576,0.5431,0.7172,0.7509,0.8362,0.4378,0.6967,0.752
+no_hgnet,0.8607,0.5667,0.7083,0.7528,0.8284,0.5355,0.7036,0.747
