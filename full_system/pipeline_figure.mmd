@@ -1,0 +1,46 @@
+flowchart LR
+  classDef input fill:#f7f7f7,stroke:#333333,stroke-width:1px,color:#111111
+  classDef det fill:#eaf3fb,stroke:#333333,stroke-width:1px,color:#111111
+  classDef occ fill:#f7f1e4,stroke:#333333,stroke-width:1px,color:#111111
+  classDef proc fill:#eef4ee,stroke:#333333,stroke-width:1px,color:#111111
+  classDef model fill:#edf4ff,stroke:#222222,stroke-width:1.2px,color:#111111
+  classDef output fill:#f4f4f4,stroke:#333333,stroke-width:1px,color:#111111
+
+  FaceIn["Face frame\nBGR image"]:::input
+  BodyIn["Body frame\nBGR image"]:::input
+
+  FaceBBox["YOLO-Face bbox\nx1,y1,x2,y2 + score"]:::det
+  FaceMesh["MediaPipe FaceMesh\n478 x 3 landmarks"]:::det
+  OccCNN["Occ CNN\n4-region visibility + valid"]:::occ
+  OccLabel["Occlusion labels\nleft/right eye, nose, mouth"]:::occ
+  Restore["ORFormer + HGNet\nconditional restoration"]:::occ
+  Merge["Occ-gated FaceMesh\nvisible: raw MP\noccluded: HGNet"]:::proc
+
+  Pose["YOLO-Pose\nCOCO17 skeleton"]:::det
+  PoseFeat["Pose preprocessing\nxy + bone + velocity + conf"]:::proc
+
+  Buffer["Temporal buffer\nT = 48 frames"]:::proc
+  FaceFeat["Face/Occ preprocessing\nbbox-normalized FaceMesh + mean occ"]:::proc
+  Classifier["Model4 DMS classifier\nPoseBranch + FaceBranch\nexplicit region-scalar mask gate"]:::model
+  Heads["Multi-task heads\nAction | Gaze | Hands | Talk"]:::model
+  Out["Prediction JSONL\nclass id, prob, confidence,\nface status, restored regions"]:::output
+
+  FaceIn --> FaceBBox
+  FaceBBox --> FaceMesh
+  FaceBBox --> OccCNN
+  OccCNN --> OccLabel
+  OccLabel -- "if occluded" --> Restore
+  FaceBBox --> Restore
+  FaceMesh --> Merge
+  Restore --> Merge
+  OccCNN --> Buffer
+  Merge --> Buffer
+
+  BodyIn --> Pose
+  Pose --> PoseFeat
+  PoseFeat --> Buffer
+
+  Buffer --> FaceFeat
+  FaceFeat --> Classifier
+  Classifier --> Heads
+  Heads --> Out

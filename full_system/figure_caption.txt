@@ -1,0 +1,5 @@
+Short caption:
+End-to-end pipeline of the integrated DMS system. Face and body frames are processed by separate landmark/skeleton extractors, merged through an occlusion-aware face branch, accumulated over a 48-frame window, and classified into action, gaze, hands, and talk states.
+
+Extended caption:
+Overview of the proposed integrated DMS inference pipeline. The body stream extracts COCO17 skeletons with YOLO-Pose, while the face stream uses YOLO-Face as the common coordinate basis for MediaPipe FaceMesh, region-level occlusion estimation, and conditional ORFormer+HGNet landmark restoration. Visible facial regions retain raw MediaPipe landmarks, whereas occluded regions are replaced by restored landmarks through an occlusion-gated merge. Body, face, and occlusion features are accumulated in a 48-frame temporal buffer and passed to the Model4 multi-task DMS classifier with explicit region-scalar mask gating to predict action, gaze, hands, and talk outputs.

@@ -1,0 +1,72 @@
+digraph FullDMSPipeline {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    margin=0.12,
+    pad=0.18,
+    nodesep=0.42,
+    ranksep=0.62,
+    splines=ortho
+  ];
+
+  node [
+    shape=box,
+    style="rounded,filled",
+    color="#333333",
+    penwidth=1.1,
+    fontname="Helvetica",
+    fontsize=11,
+    margin="0.09,0.06"
+  ];
+
+  edge [
+    color="#333333",
+    penwidth=1.0,
+    arrowsize=0.7,
+    fontname="Helvetica",
+    fontsize=9
+  ];
+
+  FaceIn [label="Face frame\nBGR image", fillcolor="#f7f7f7"];
+  BodyIn [label="Body frame\nBGR image", fillcolor="#f7f7f7"];
+
+  FaceBBox [label="YOLO-Face bbox\nx1,y1,x2,y2 + score", fillcolor="#eaf3fb"];
+  FaceMesh [label="MediaPipe FaceMesh\n478 x 3 landmarks", fillcolor="#eaf3fb"];
+  OccCNN [label="Occ CNN\n4-region visibility + valid", fillcolor="#f7f1e4"];
+  OccLabel [label="Occlusion labels\nleft/right eye, nose, mouth", fillcolor="#f7f1e4"];
+  Restore [label="ORFormer + HGNet\nconditional restoration", fillcolor="#f7f1e4"];
+  Merge [label="Occ-gated FaceMesh\nvisible: raw MP\noccluded: HGNet", fillcolor="#eef4ee"];
+
+  Pose [label="YOLO-Pose\nCOCO17 skeleton", fillcolor="#eaf3fb"];
+  PoseFeat [label="Pose preprocessing\nxy + bone + velocity + conf", fillcolor="#eef4ee"];
+
+  Buffer [label="Temporal buffer\nT = 48 frames", fillcolor="#eef4ee"];
+  FaceFeat [label="Face/Occ preprocessing\nbbox-normalized FaceMesh + mean occ", fillcolor="#eef4ee"];
+  Classifier [label="Model4 DMS classifier\nPoseBranch + FaceBranch\nexplicit region-scalar mask gate", fillcolor="#edf4ff", penwidth=1.3];
+  Heads [label="Multi-task heads\nAction | Gaze | Hands | Talk", fillcolor="#edf4ff", penwidth=1.3];
+  Out [label="Prediction JSONL\nclass id, prob, confidence,\nface status, restored regions", fillcolor="#f4f4f4"];
+
+  { rank=same; FaceIn; BodyIn; }
+  { rank=same; FaceBBox; Pose; }
+  { rank=same; FaceMesh; OccCNN; PoseFeat; }
+
+  FaceIn -> FaceBBox;
+  FaceBBox -> FaceMesh;
+  FaceBBox -> OccCNN;
+  OccCNN -> OccLabel;
+  OccLabel -> Restore [label="if occluded"];
+  FaceBBox -> Restore;
+  FaceMesh -> Merge;
+  Restore -> Merge;
+  OccCNN -> Buffer;
+  Merge -> Buffer;
+
+  BodyIn -> Pose;
+  Pose -> PoseFeat;
+  PoseFeat -> Buffer;
+
+  Buffer -> FaceFeat;
+  FaceFeat -> Classifier;
+  Classifier -> Heads;
+  Heads -> Out;
+}
