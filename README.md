@@ -54,7 +54,7 @@ model4_dms/
 │   ├── make_*_notebook.py                # 시각화 노트북 생성기
 │   └── notebooks/                        # 결과 시각화 (gaze 사례, occlusion NME 진단)
 │
-└── full_system/        # ★ 실시간 통합(런타임) 시스템 — 영상 입력 → end-to-end DMS
+├── full_system/        # ★ 실시간 통합(런타임) 시스템 — 영상 입력 → end-to-end DMS
     ├── full_dms_system/                  # 8 stage wrapper + FullDMSSystem orchestrator
     │   ├── yolo_pose_skeleton_extractor / yolo_face_bbox_extractor / mediapipe_facemesh_yolo
     │   ├── occ_cnn_realtime              # occ CNN 온라인 추론 → x_occ
@@ -65,7 +65,11 @@ model4_dms/
     ├── scripts/        # run_video_pair / overlay / edge-TTS 경고음 / smoke test
     ├── experiments/retrain_ablation/     # leave-one-module-out 재학습 ablation
     └── notebooks/, outputs/(샘플)
-    # classifier/ · landmark/ 코드를 그대로 재사용(중복 없음). 체크포인트는 models/MODELS.md
+│   # classifier/ · landmark/ 코드를 그대로 재사용(중복 없음). 체크포인트는 models/MODELS.md
+│
+├── comparison/         # 비교군 — 외부 SOTA baseline 3종(SkateFormer/SDA-TR/PO-GUISE) 재구현
+│
+└── ablation/           # ablation study — occ 주입위치(AblationB)·gaze 보조실험·baseline 7종·bootstrap 통계검증
 ```
 
 ## 파이프라인 (end-to-end)
@@ -141,6 +145,15 @@ face_frame + body_frame
 - `classifier/` · `landmark/` 코드를 그대로 재사용하고, 체크포인트는 `models/MODELS.md` 참조.
 - 실행: `python full_system/scripts/run_video_pair.py --config full_system/configs/full_dms_config_template.yaml --face-video ... --body-video ...`
 - 상세는 [`full_system/README.md`](full_system/README.md).
+
+### 비교군 · Ablation
+
+- [`comparison/`](comparison/) — 우리 모델과 동일 프로토콜로 재구현한 외부 SOTA 비교군 3종
+  (SkateFormer, SDA-TR Spatiotemporal, PO-GUISE Pose-guided). occlusion 신호 미사용이 핵심 대비점.
+- [`ablation/`](ablation/) — occ 주입 위치 비교(`AblationB`), gaze 보조 ablation, baseline 7종(`Compare/`),
+  그리고 n=5000 부트스트랩 통계검증(`bootstrap_4545`/`bootstrap_toolkit`) + 통합 평가(`Eval_Ablation`).
+
+두 폴더 모두 `classifier/` 의 V5 구조를 fork 한 실험 스냅샷이며, 체크포인트·대용량 예측 덤프는 미추적(요약 결과만 포함).
 
 ## 주요 결과 (gaze head, clip-level macro-F1)
 

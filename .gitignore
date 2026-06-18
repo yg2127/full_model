@@ -21,6 +21,16 @@ full_system/outputs/**/*.mp4
 full_system/experiments/**/runs/
 full_system/experiments/**/run_all.log
 
+# comparison/ · ablation/ 실험 스냅샷: 코드+작은 결과만 추적, 대용량 산출물 차단
+**/artifacts/
+**/artifacts_*/
+**/predictions/
+**/bootstrap_results_*/raw/
+**/*clip_predictions*.csv
+**/*_predictions.csv
+**/*confusion_epoch_*.csv
+*.log
+
 # 결과/캐시 디렉토리
 # results: 대용량만 차단(핵심 결과 CSV/json 은 추적)
 results/**/*.pt
