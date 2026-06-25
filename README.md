@@ -17,7 +17,7 @@
 
 ---
 
-## 핵심 결과 (한눈에)
+## 핵심 결과
 
 - **차폐 상황에서도 강건**: clean→masked clip-level Macro-F1 하락폭이 action **0.8%p** / gaze **8.3%p** / hands **0.8%p** / talk **0.5%p** 로 작음.
 - **외부 SOTA 비교군 대비 masked gaze F1 최고**: DriveAct 대비 **+10.83%**, 최저 비교군 대비 **+46.32%** (Ours 0.5831).
