@@ -50,3 +50,6 @@ wandb/
 models/**/*.pt
 models/**/*.tflite
 *.tflite
+
+# 발표 원본(편집용, 대용량) — 제외
+docs/*.pptx

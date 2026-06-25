@@ -1,208 +1,150 @@
-# Occlusion-Robust Driver Monitoring (model4 / model5)
+# OcclusionGateNet
 
-DMD 운전자 모니터링용 **멀티태스크 분류 모델**(action·gaze·hands·talk) 와 그 입력을 가림(occlusion)에 강건하게 만드는
-**랜드마크 복원 파이프라인**의 전체 구현. 핵심 기여는 *가려진 얼굴 영역의 좌표를 HGNet 으로 복원해 끼워넣는 occlusion-gated
-face 입력(occgateRAW)* 으로, 가림 상황에서 gaze 성능 저하(PDI)를 크게 줄인다.
+**얼굴 차폐·저조도(NIR) 환경에도 강건한 운전자 모니터링 시스템 (Occlusion-Robust Driver Monitoring System)**
 
-## 핵심 아이디어
+운전자의 얼굴이 **선글라스·마스크·손** 등으로 가려지거나 **야간 저조도** 상황에서도 운전자 상태(행동·시선·손·대화)를
+안정적으로 분류하는 멀티태스크 DMS. 핵심은 *가려진 얼굴 영역의 랜드마크를 **ORFormer+HGNet**으로 복원하고,
+단서별 가시성을 추정해 얼굴·자세 단서를 상황에 맞게 **동적으로 융합(Occlusion-aware Dynamic Fusion)***하는 데 있다.
 
-얼굴 랜드마크 좌표만으로 gaze/action 을 분류하면 **가림(선글라스·마스크·패치)** 시 mediapipe facemesh 가 무너져 성능이 급락한다.
-이를 막기 위해:
+> 세종대학교 인공지능학과 · 2026-1 캡스톤 디자인 · 팀 **스꾸삐(팀 01)** · 지도교수 이동훈
+> 팀원: 유건(팀장) · 강성찬 · 황영인 · 이수찬 · 강민성
 
-1. **정상 영역** → mediapipe facemesh 원본 좌표 (iris 정밀도 보존)
-2. **가린 영역** → ORFormer+HGNet 으로 복원한 좌표를 facemesh 좌표계로 정합(Umeyama)해 치환
-3. region 별 가림 여부는 **occlusion CNN** 또는 manifest GT 로 판정
-4. 이렇게 만든 **occgateRAW** 좌표를 멀티태스크 분류기의 face branch 입력으로 사용
+---
 
-`model4` = `task_gated_late` fusion + occgateRAW. `model5` = `task_region_scalar_gated_late` fusion + fixedmask-finetuned HGNet 좌표.
+## 핵심 결과 (한눈에)
+
+- **차폐 상황에서도 강건**: clean→masked clip-level Macro-F1 하락폭이 action **0.8%p** / gaze **8.3%p** / hands **0.8%p** / talk **0.5%p** 로 작음.
+- **외부 SOTA 비교군 대비 masked gaze F1 최고**: DriveAct 대비 **+10.83%**, 최저 비교군 대비 **+46.32%** (Ours 0.5831).
+- **종합 강건성**: 비교군 평균 대비 종합 F1 **+11.4%**, 성능 저하 지수 **PDI 6.93% → 3.67% (≈47% 감소)**.
+- **모듈 검증**: 차폐 판단 CNN Macro-F1 **0.9714**, 차폐 좌표 복원 NME **≤ 5%**(clean 대비), IR pose mAP50-95 **0.788**.
+
+## 아키텍처
+
+![OcclusionGateNet Architecture](docs/assets/architecture.png)
+
+입력은 **Face/Body 2대의 근적외선(IR) 카메라**. 얼굴 스트림과 자세 스트림을 각각 처리한 뒤, 차폐 가시성에 따라
+얼굴·자세 단서의 반영 비중을 동적으로 조정해 4개 task를 분류한다.
+
+| 단계 | 모듈 (`full_system/full_dms_system/`) | 역할 |
+|---|---|---|
+| 얼굴 검출 | `YoloFaceBBoxExtractor` | YOLO-Face 얼굴 bbox (단일 얼굴 좌표 기준) |
+| 얼굴 랜드마크 | `MediaPipeFaceMeshOnYoloCrop` | bbox crop → 478 landmarks |
+| 차폐 판단 | `OccCNNRealtimeWrapper` | 부위별 가시성 추정 → `occ` (Macro-F1 0.97) |
+| **랜드마크 복원** | `HGNetRestorer` | **ORFormer**(참조 heatmap) + **HGNet** → 가린 좌표 복원 |
+| **차폐 게이팅 병합** | `OccGatedFaceMeshMerger` | 정상=원본 / 가림=복원 좌표 치환 |
+| 자세 추출 | `YoloPoseSkeletonExtractor` | YOLO-Pose(IR FT) → skeleton 17점 |
+| 시계열 누적 | `TemporalDMSBuffer` | 최근 48프레임 window |
+| **동적 융합·분류** | `DMSClassifierWrapper` (+ `MultitaskClassifier`) | Occlusion-aware Dynamic Fusion(Mask Gate) → action/gaze/hands/talk |
+| 경고 (데모) | `WarningStateMachine` (`scripts/`) | 위험 판단 → 시각+음성(TTS) 경고 |
+
+## 핵심 기여 (3 pillars)
+
+1. **NIR 도메인 적응** — 공개 데이터의 RGB 모델은 IR 차량 실내에서 불안정(RGB gaze 86.3% vs IR 76.8%). DMD NIR 1,000프레임을 직접 annotation 해 YOLO-Pose를 fine-tuning(mAP50-95 0.788).
+2. **차폐 랜드마크 복원** — 가림으로 무너지는 FaceMesh를 **ORFormer + VQ-VAE + HGNet**으로 복원, clean 대비 NME 5% 이내 유지.
+3. **Occlusion-aware Dynamic Fusion** — 부위별 가시성(occ CNN)을 task·region 단위 **Mask Gate**로 활용해 얼굴·자세 단서 비중을 동적 조정. No-Occ baseline 대비 masked gaze F1 **+9.63%p**.
+
+## 결과 및 분석
+
+### 1) 정량 성능 — clean vs masked (per-head clip-level Macro-F1)
+
+![Main Result: clean vs masked F1](docs/assets/result_main_f1.png)
+
+| Task | clean | masked (occluded) | 하락폭 |
+|---|---|---|---|
+| action | 0.853 | 0.846 | 0.8%p |
+| **gaze** | 0.636 | 0.583 | **8.3%p** |
+| hands | 0.704 | 0.699 | 0.8%p |
+| talk | 0.752 | 0.748 | 0.5%p |
+
+가장 차폐에 민감한 gaze조차 큰 하락 없이 유지된다.
+
+### 2) Ablation — 모듈 제거 & 융합 위치
+
+![Ablation: module removal](docs/assets/result_ablation_module.png)
+![Ablation: fusion position](docs/assets/result_ablation_fusion.png)
+
+- **모듈 제거**: 차폐 판단(occ)·gate 모듈 제거 시 gaze 성능이 크게 하락 → 두 모듈이 차폐 강건성의 핵심.
+- **융합 위치**: 차폐 정보를 task 융합 단계에 적용했을 때 masked gaze F1 **0.5831** 로, No-Occ baseline(0.4868) 대비 **+9.63%p**.
+
+### 3) 외부 비교군 대비 (masked gaze F1) & 종합 강건성(PDI)
+
+![Comparison vs external baselines](docs/assets/result_comparison.png)
+![Performance × Robustness (PDI vs F1)](docs/assets/result_pdi.png)
+
+| Model | masked gaze F1 | vs Ours |
+|---|---|---|
+| **Ours (OcclusionGateNet)** | **0.5831** | — |
+| DriveAct | 0.5262 | +10.83% |
+| pose_guided | 0.4828 | |
+| spatiotemporal | 0.4685 | |
+| dfs | 0.4617 | |
+| skateformer | 0.4385 | |
+| dmd_original | 0.3985 | +46.32% |
+
+종합 F1은 비교군 평균 대비 +11.4%, PDI(성능 저하 지수)는 6.93%→3.67%로 약 47% 감소 — clean에서 높을 뿐 아니라 **차폐 시 저하를 효과적으로 억제**.
+
+### 4) 실차 추론 데모
+
+![Real-vehicle demo](docs/assets/demo_overlay.png)
+
+Arducam IR-Cut(B0506) 2대(Face/Body)를 차량에 설치, 영종도 야간 실도로에서 선글라스·마스크 차폐 시나리오를 촬영.
+action/gaze/hands/talk 분류 + 부위별 차폐도를 오버레이하고 위험 행동 경고를 출력.
+
+## 데이터셋
+
+- **DMD (Driver Monitoring Dataset)** — 41h, 37 drivers, Face/Body/Hands × RGB/IR/Depth, 4-task(OpenLABEL annotation).
+- **Masking 서브셋(자체 구축)** — 눈·입 등 주요 부위를 8종 appearance(blur/checker/noise/solid/stripe 등)로 인위 차폐해 차폐 학습·평가에 사용.
+
+| Task | 입력 | 라벨 |
+|---|---|---|
+| Action | Face + Body | safe / phone_text / drink / reach / hair_makeup / talk_passenger / other |
+| Gaze | Face 중심 | looking_road / not_looking_road |
+| Hands | Body/Hands | both / right / left / none |
+| Talk | Face 중심 | talking / not_talking |
+| Occlusion | Face/Body/Hands | region별 visible / occluded |
 
 ## 저장소 구조
 
 ```
-model4_dms/
-├── classifier/        # 멀티태스크 DMS 분류기 (action/gaze/hands/talk)
-│   ├── src/
-│   │   ├── models/multitask_classifier.py   # 메인 모델 (pose GCN + face branch + fusion + 4 head)
-│   │   ├── models/fusion/                    # occlusion-aware fusion 모듈들
-│   │   │   ├── factory.py                    #   fusion kind 선택
-│   │   │   ├── task_feature_fusion.py        #   task_gated_late      (model4)
-│   │   │   ├── task_region_scalar_fusion.py  #   task_region_scalar_gated_late (model5)
-│   │   │   ├── explicit_region_mask_gate.py / occ_attention_bias.py / occ_token_region_transformer.py
-│   │   │   └── region_occ_utils.py
-│   │   ├── data/        # dataset.py(window/npz_swap 로딩), clip_builder, window, fixed_manifest_split, preprocess_*
-│   │   ├── training/    # train.py(엔트리), runner, loops, builders, aggregation
-│   │   └── evaluation/  # v1_eval
-│   ├── constants/       # gaze_zones(9-class), face_regions
-│   ├── configs/         # base + fusion variants + generated/(model4·model5 yaml)
-│   └── scripts/         # build_hgnet_cache_from_hyi_split.py 등
-│
-├── landmark/           # 랜드마크 복원 (ORFormer + StackedHGNet) — pretrain_v4
-│   ├── src/models/      # StackedHGNet.py, VQVAE.py, simple_vit.py(ORFormer), quantizer.py
-│   ├── src/data/        # dataset_dmd.py, heatmap_gen.py, augmentation.py, face_edge_info.py
-│   ├── configs/         # default.py (DMD/DMD_68 cfg)
-│   ├── scripts/         # train_phase{1,2,3}_*.py (codebook→ORFormer→HGNet 학습)
-│   └── docs/            # METHOD_DIFF, TRAINING_LOG
-│
-├── pipeline/           # occlusion gating 파이프라인 + 실험 스크립트 (occ_cnn_v1)
-│   ├── build_occgate_RAW_cache.py        # occgateRAW 좌표 캐시 (정상=facemesh / 가림=hgnet→facemesh)
-│   ├── build_occgate_RAW_ft_cache.py     #   finetuned HGNet 버전 (model5)
-│   ├── build_occgate_GT_cache.py         #   occgateGT (hgnet 좌표계 버전, 비교용)
-│   ├── regen_hgnet478_ft_masked.py       # finetuned HGNet 으로 masked 좌표 재생성
-│   ├── finetune_hgnet_fixedmask.py       # HGNet 을 8 appearance 가림으로 finetune
-│   ├── train_occ_cnn.py                  # region occlusion CNN 학습 (TinyRegionCNN)
-│   ├── verify_ft_nme.py / compare_orformer_vs_hgnet.py   # 랜드마크 NME 검증
-│   ├── make_*_notebook.py                # 시각화 노트북 생성기
-│   └── notebooks/                        # 결과 시각화 (gaze 사례, occlusion NME 진단)
-│
-├── full_system/        # ★ 실시간 통합(런타임) 시스템 — 영상 입력 → end-to-end DMS
-    ├── full_dms_system/                  # 8 stage wrapper + FullDMSSystem orchestrator
-    │   ├── yolo_pose_skeleton_extractor / yolo_face_bbox_extractor / mediapipe_facemesh_yolo
-    │   ├── occ_cnn_realtime              # occ CNN 온라인 추론 → x_occ
-    │   ├── hgnet_restorer                # ORFormer + HGNet 온라인 복원
-    │   ├── occ_gate_merger / temporal_buffer(48f) / dms_classifier_wrapper
-    │   └── full_system.py                # 전체 파이프라인 결합
-    ├── configs/        # 런타임 템플릿 + DMS 분류기 config(체크포인트와 매칭)
-    ├── scripts/        # run_video_pair / overlay / edge-TTS 경고음 / smoke test
-    ├── experiments/retrain_ablation/     # leave-one-module-out 재학습 ablation
-    └── notebooks/, outputs/(샘플)
-│   # classifier/ · landmark/ 코드를 그대로 재사용(중복 없음). 체크포인트는 models/MODELS.md
-│
-└── experiments/        # 연구 검증(과정) — 코어와 분리
-    ├── comparison/     #   외부 SOTA baseline 3종(SkateFormer/SDA-TR/PO-GUISE) 재구현
-    ├── ablation/       #   occ 주입위치(AblationB)·gaze 보조실험·baseline 7종·bootstrap 통계검증
-    └── legacy/         #   구 model4 결과(superseded) — 최종본 OcclusionGateNet 으로 대체
+full_model/
+├── landmark/            # ① ORFormer + HGNet 랜드마크 복원 (학습 코드)
+├── classifier/          # ② 멀티태스크 분류기 코어 (OcclusionGateNet fusion 포함)
+├── full_system/         # ★ 최종 통합 실시간 시스템 (영상 → end-to-end DMS)
+│   ├── full_dms_system/ #   8 stage 런타임 모듈 + FullDMSSystem orchestrator
+│   ├── configs/ scripts/ experiments/ notebooks/
+├── pipeline/            # occgate 캐시 생성 · occ CNN 학습 등 재현 스크립트
+├── models/              # 체크포인트 provenance (MODELS.md / PROVENANCE.md)
+├── experiments/         # 연구 검증
+│   ├── ablation/        #   occ 주입위치 · gaze 보조실험 · bootstrap 통계검증
+│   ├── comparison/      #   외부 SOTA 비교군 (SkateFormer / SDA-TR / PO-GUISE)
+│   └── legacy/          #   구 model4 결과(superseded)
+└── docs/                # 보고서·발표자료·다이어그램(architecture.svg)
 ```
 
-## 파이프라인 (end-to-end)
+> `full_system/`이 최종 산출물이며, 학습 코어인 `classifier/`·`landmark/`를 그대로 재사용한다(중복 없음).
 
-### 추론 파이프라인 (occlusion gating)
+## 실행 (실시간 통합 시스템)
 
-```mermaid
-flowchart TD
-    IMG["face frame"] --> FM["mediapipe FaceMesh<br/>478 landmarks"]
-    IMG --> OCC["occlusion CNN<br/>region별 가림 판정"]
-    IMG --> HG["ORFormer + HGNet<br/>landmark 복원"]
-
-    HG --> ALIGN["Umeyama 정합<br/>hgnet → facemesh 좌표계"]
-
-    FM --> GATE{"region<br/>가림?"}
-    OCC --> GATE
-    ALIGN --> GATE
-
-    GATE -- "정상" --> KEEP["facemesh 좌표 유지<br/>(iris 정밀도 보존)"]
-    GATE -- "가림" --> SWAP["복원 좌표로 치환"]
-    KEEP --> OCCGATE["occgateRAW landmarks"]
-    SWAP --> OCCGATE
-
-    OCCGATE --> FACE["face branch"]
-    POSE["body pose"] --> GCN["pose GCN"]
-    FACE --> FUSE["task_gated_late fusion<br/>(model4)"]
-    GCN --> FUSE
-    FUSE --> H1["action"]
-    FUSE --> H2["gaze (9-zone)"]
-    FUSE --> H3["hands"]
-    FUSE --> H4["talk"]
-```
-
-### 학습 / 캐시 생성 순서
-
-```
-[학습된 자산]  ORFormer(landmark/) + HGNet(landmark/) + occ CNN(pipeline/)
-       │
-       ▼
-1) HGNet 좌표 캐시      classifier/scripts/build_hgnet_cache_from_hyi_split.py   → *_hgnet478.npz
-2) occgateRAW 캐시      pipeline/build_occgate_RAW_cache.py                      → *_hgnet478_occgateRAW.npz
-3) 분류기 학습          classifier/src/training/train.py --config <model4.yaml>
-   (face npz_swap 으로 occgateRAW 좌표를 face branch 입력으로 로드)
-
-[model5 추가 단계]
-4) HGNet fixedmask finetune   pipeline/finetune_hgnet_fixedmask.py
-5) 좌표 재생성 + occgateRAW_ft pipeline/regen_hgnet478_ft_masked.py → build_occgate_RAW_ft_cache.py
-6) model5 학습                train.py --config <model5.yaml>
-```
-
-분류기 학습 실행 예:
 ```bash
-cd classifier
-PYTHONPATH=$(pwd):$(pwd)/configs python src/training/train.py \
-  --config configs/generated/model4_occgateRAW_taskGated_occCNN_seed42.yaml
+cd full_system
+pip install -r requirements.txt
+python scripts/run_video_pair.py \
+  --config configs/full_dms_config_template.yaml \
+  --face-video <face_ir.mp4> --body-video <body_ir.mp4> \
+  --out-jsonl outputs/predictions.jsonl
 ```
 
-### 실시간 통합 시스템 (`full_system/`)
+체크포인트(`*.pt`)는 용량상 git 미추적 — `models/MODELS.md`의 출처/배치 안내 참조.
 
-위 추론 파이프라인은 학습 시 **오프라인 캐시(npz)** 기반이다. `full_system/` 은 같은 구성요소를
-**영상 한 쌍(face/body)에 대해 매 프레임 온라인으로** 돌리는 런타임이다 — ORFormer·HGNet·occ CNN 을
-캐시가 아니라 직접 추론한다.
+## 한계 및 향후 계획
 
-```
-face_frame + body_frame
- ├─ body: YOLO-Pose → skeleton(17,2)
- └─ face: YOLO-face bbox → [ occ CNN(가시성) , MediaPipe FaceMesh(478) ]
-          └─ 가림 region 있으면 → ORFormer→reference heatmap→HGNet 복원 → 가린 부위만 치환
- → 최근 48프레임 → Model4 분류기 → action / gaze / hands / talk
-```
+- **Gaze 정밀도**: 랜드마크 기반이라 세밀한 시선 변화에 한계 → eye-crop·동공 특징 기반 gaze-specific branch 추가 예정.
+- **복원 품질**: 강한 차폐·얼굴 검출 실패 시 복원 불안정 → 실차 차폐 데이터 확장, 신뢰도 기반 복원.
+- **연산량**: 다중 모델 동시 구동 → 가지치기·양자화 경량화로 차량 탑재 최적화.
 
-- 얼굴 분기가 실패해도(검출 실패 등) zero landmark + 중립 occ 로 **추론을 멈추지 않고** body 분기로 계속 진행.
-- `classifier/` · `landmark/` 코드를 그대로 재사용하고, 체크포인트는 `models/MODELS.md` 참조.
-- 실행: `python full_system/scripts/run_video_pair.py --config full_system/configs/full_dms_config_template.yaml --face-video ... --body-video ...`
-- 상세는 [`full_system/README.md`](full_system/README.md).
+## 문서
 
-### 비교군 · Ablation
-
-- [`experiments/comparison/`](experiments/comparison/) — 우리 모델과 동일 프로토콜로 재구현한 외부 SOTA 비교군 3종
-  (SkateFormer, SDA-TR Spatiotemporal, PO-GUISE Pose-guided). occlusion 신호 미사용이 핵심 대비점.
-- [`experiments/ablation/`](experiments/ablation/) — occ 주입 위치 비교(`AblationB`), gaze 보조 ablation, baseline 7종(`Compare/`),
-  그리고 n=5000 부트스트랩 통계검증(`bootstrap_4545`/`bootstrap_toolkit`) + 통합 평가(`Eval_Ablation`).
-- [`experiments/legacy/`](experiments/legacy/) — 구 model4 결과(superseded). 최종본은 OcclusionGateNet(`full_system/`).
-
-두 폴더 모두 `classifier/` 의 V5 구조를 fork 한 실험 스냅샷이며, 체크포인트·대용량 예측 덤프는 미추적(요약 결과만 포함).
-
-## 주요 결과 (gaze head, clip-level macro-F1)
-
-| 모델 | fusion | face 입력 | clean | masked | PDI |
-|---|---|---|---|---|---|
-| baseline (hgnet478 단순) | concat | hgnet 좌표 | ~0.475 | — | — |
-| **model4** | task_gated_late | occgateRAW | **0.600** | **0.546** | +9.0% |
-| hyi v5_task_gated_late | task_gated_late | mediapipe | 0.613 | 0.582 | +4.9% |
-| hyi task_region_scalar (gaze045) | task_region_scalar_gated_late | mediapipe | 0.577 | 0.555 | +3.8% |
-| **model5** (예정) | task_region_scalar_gated_late | occgateRAW_ft | TBD | TBD | TBD |
-
-- PDI = (clean − masked) / clean × 100. 낮을수록 가림에 강건.
-- occgateRAW 가 가림 부위 좌표를 HGNet 으로 복원해 masked gaze 와 robust 를 개선.
-
-### 오분류 사례 시각화
-
-가림(선글라스·마스크·노이즈/체커 패치)으로 facemesh 가 무너져 gaze zone 을 혼동하는 대표 사례.
-`[X]` = 오분류, `occ le/re/mo` = 좌안/우안/입 region 가림도, `no landmark` = facemesh 검출 실패.
-
-![occlusion confusion cases](docs/assets/confusion_cases.png)
-
-## 모델 가중치 (`models/` — 로컬 전용, git 미추적)
-
-모든 모델은 `models/` 에 수집됨(occ CNN·ORFormer·codebook·HGNet phase3a/v2/v3·분류기·facemesh tflite, ~268M). 용량 때문에 .gitignore. 상세는 `models/README.md`. inference: `python pipeline/inference_demo.py --image face.png --occ`.
-
-## 기타 외부 자산 (저장소·models 미포함)
-
-대용량 자산은 git 에 넣지 않음(.gitignore). 재현 시 아래 경로/체크포인트 필요:
-
-| 항목 | 경로 |
-|---|---|
-| ORFormer 라이브러리(vendor) | `/data/shared/orformer/vendor` (PYTHONPATH 추가) |
-| ORFormer 가중치 | `pretrain_v4/artifacts/phase2_orformer_fixed/best.pt` |
-| HGNet 가중치 (model4=**v3**) | `pretrain_v4/artifacts/phase3a_hgnet_478_v3/best.pt` |
-| HGNet fixedmask finetune | `scuppy/yg/hgnet_fixedmask_ft/best.pt` |
-| occ CNN (model4 occ_pred 생성) | **hyi** `/home/hyi/Code/Step9_extract_crop_npz/best.pt` (권한거부·미포함) |
-| DMD 원본 영상/랜드마크 | `/data/shared/DMD`, `/data/shared/DMD_landmarks` |
-| 가림 데이터셋 | `/data/shared/Occlusion_subset_dataset/region_occlusion_video_dataset_v3_original_fixedmask` |
-| fixed split manifest | `/data/shared/scuppy/hyi/fixed_splits/dms_clean_masked_fixed_items_v1.json` |
-
-> 코드 내 일부 절대경로는 위 자산을 가리킴. 다른 환경에서 재현 시 경로를 맞춰야 함.
-
-## 데이터셋
-
-DMD (Driver Monitoring Dataset) — distraction(action/gaze_weak/hands/talk) + gaze(s6, 9-zone fine) 세션.
-subject-disjoint fixed split (clean/masked 1:1 paired). 가림은 6 zero-paint variant + fixedmask 8 appearance(solid/noise/checker/stripe/blur 등).
-
-## 요구사항
-
-`requirements.txt` 참조. 핵심: PyTorch, torchvision, OpenCV, mediapipe(facemesh GT), scikit-learn, matplotlib, PyYAML.
+- 최종 결과보고서: [`docs/final_report.pdf`](docs/final_report.pdf)
+- 발표 자료: [`docs/presentation_slides.pdf`](docs/presentation_slides.pdf)
+- 아키텍처 원본(벡터): [`docs/assets/architecture.svg`](docs/assets/architecture.svg)
+</content>

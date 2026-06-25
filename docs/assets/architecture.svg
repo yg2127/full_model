@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 660" font-family="'NanumGothic','Noto Sans CJK KR','Malgun Gothic',sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7.5,3 L0,6 Z" fill="#2C3E50"/>
+    </marker>
+    <marker id="arro" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7.5,3 L0,6 Z" fill="#D2691E"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1560" height="660" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="40" y="40" font-size="25" font-weight="700" fill="#13263a">OcclusionGateNet — Occlusion-Robust Driver Monitoring System</text>
+  <text x="40" y="64" font-size="13.5" fill="#5b6b7b">차폐·저조도(NIR) 환경에 강건한 운전자 모니터링 · Face/Body 2-stream → 신뢰도 기반 동적 융합 → 4-task</text>
+
+  <!-- Stream bands -->
+  <rect x="185" y="88" width="835" height="300" rx="16" fill="#EAF2FB" stroke="#C2DAF2" stroke-width="1.5"/>
+  <text x="205" y="113" font-size="14" font-weight="700" fill="#2F6FB3" letter-spacing="1">FACE STREAM · 얼굴 차폐 강건 처리</text>
+
+  <rect x="185" y="500" width="393" height="116" rx="16" fill="#EBF7EF" stroke="#C6E6D1" stroke-width="1.5"/>
+  <text x="205" y="524" font-size="14" font-weight="700" fill="#2E8B57" letter-spacing="1">BODY STREAM</text>
+
+  <!-- ===== Connectors: SOLID (data flow) ===== -->
+  <g fill="none" stroke="#2C3E50" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <polyline points="170,250 202,250" marker-end="url(#arr)"/>
+    <polyline points="345,250 372,250 372,160 377,160" marker-end="url(#arr)"/>
+    <polyline points="345,250 372,250 372,330 377,330" marker-end="url(#arr)"/>
+    <polyline points="550,160 810,160 810,230 842,230" marker-end="url(#arr)"/>
+    <polyline points="790,330 810,330 810,270 842,270" marker-end="url(#arr)"/>
+    <polyline points="1017,250 1155,250 1155,297" marker-end="url(#arr)"/>
+    <polyline points="170,564 202,564" marker-end="url(#arr)"/>
+    <polyline points="345,564 397,564" marker-end="url(#arr)"/>
+    <polyline points="550,564 1030,564 1030,330 1062,330" marker-end="url(#arr)"/>
+    <polyline points="1155,360 1155,395" marker-end="url(#arr)"/>
+    <!-- fusion -> heads bus -->
+    <polyline points="1280,439 1308,439"/>
+    <polyline points="1308,318 1308,550"/>
+    <polyline points="1308,318 1332,318" marker-end="url(#arr)"/>
+    <polyline points="1308,367 1332,367" marker-end="url(#arr)"/>
+    <polyline points="1308,416 1332,416" marker-end="url(#arr)"/>
+    <polyline points="1308,465 1332,465" marker-end="url(#arr)"/>
+    <polyline points="1308,550 1332,550" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- ===== Connectors: DASHED (occlusion-conditional / gating) ===== -->
+  <g fill="none" stroke="#D2691E" stroke-width="2.2" stroke-dasharray="7 4" stroke-linejoin="round" stroke-linecap="round">
+    <polyline points="550,330 607,330" marker-end="url(#arro)"/>
+    <polyline points="463,302 463,250 840,250" marker-end="url(#arro)"/>
+    <polyline points="463,358 463,460 1047,460" marker-end="url(#arro)"/>
+  </g>
+  <text x="578" y="322" text-anchor="middle" font-size="10.5" fill="#B5571A">차폐 시</text>
+  <text x="655" y="242" text-anchor="middle" font-size="10.5" fill="#B5571A">visibility gate (가시성 게이팅)</text>
+  <text x="748" y="452" text-anchor="middle" font-size="10.5" fill="#B5571A">occ 가시성 → fusion gate</text>
+
+  <!-- ===== Inputs ===== -->
+  <rect x="35" y="222" width="135" height="56" rx="10" fill="#F4F6F8" stroke="#9AA7B4" stroke-width="2"/>
+  <text x="102" y="246" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33424f">Face Cam (IR)</text>
+  <text x="102" y="264" text-anchor="middle" font-size="11" fill="#7a8893">근적외선 카메라</text>
+
+  <rect x="35" y="536" width="135" height="56" rx="10" fill="#F4F6F8" stroke="#9AA7B4" stroke-width="2"/>
+  <text x="102" y="560" text-anchor="middle" font-size="14.5" font-weight="600" fill="#33424f">Body Cam (IR)</text>
+  <text x="102" y="578" text-anchor="middle" font-size="11" fill="#7a8893">근적외선 카메라</text>
+
+  <!-- ===== Face stream boxes ===== -->
+  <rect x="205" y="222" width="140" height="56" rx="10" fill="#fff" stroke="#2F6FB3" stroke-width="2"/>
+  <text x="275" y="246" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">YOLO-Face</text>
+  <text x="275" y="264" text-anchor="middle" font-size="11" fill="#6b7a89">얼굴 bbox</text>
+
+  <rect x="377" y="132" width="173" height="56" rx="10" fill="#fff" stroke="#2F6FB3" stroke-width="2"/>
+  <text x="463" y="156" text-anchor="middle" font-size="14" font-weight="600" fill="#13263a">MediaPipe FaceMesh</text>
+  <text x="463" y="174" text-anchor="middle" font-size="11" fill="#6b7a89">478 landmarks</text>
+
+  <rect x="377" y="302" width="173" height="56" rx="10" fill="#fff" stroke="#2F6FB3" stroke-width="2"/>
+  <text x="463" y="326" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">Occlusion CNN</text>
+  <text x="463" y="344" text-anchor="middle" font-size="11" fill="#6b7a89">부위별 가시성 (Macro-F1 0.97)</text>
+
+  <rect x="607" y="302" width="183" height="56" rx="10" fill="#fff" stroke="#2F6FB3" stroke-width="2"/>
+  <text x="698" y="326" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">ORFormer + HGNet</text>
+  <text x="698" y="344" text-anchor="middle" font-size="11" fill="#6b7a89">차폐 좌표 복원 (NME ≤ 5%)</text>
+
+  <!-- Occ-Gated Merge (accent) -->
+  <rect x="842" y="210" width="175" height="80" rx="12" fill="#FFF1E6" stroke="#E8843C" stroke-width="2.5"/>
+  <text x="929" y="238" text-anchor="middle" font-size="15" font-weight="700" fill="#B5571A">Occ-Gated Merge</text>
+  <text x="929" y="257" text-anchor="middle" font-size="11" fill="#9a6438">정상=원본 좌표</text>
+  <text x="929" y="273" text-anchor="middle" font-size="11" fill="#9a6438">가림=복원 좌표 치환</text>
+
+  <!-- ===== Body stream boxes ===== -->
+  <rect x="205" y="536" width="140" height="56" rx="10" fill="#fff" stroke="#2E8B57" stroke-width="2"/>
+  <text x="275" y="560" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">YOLO-Pose</text>
+  <text x="275" y="578" text-anchor="middle" font-size="11" fill="#6b7a89">IR fine-tuned · mAP 0.79</text>
+
+  <rect x="400" y="536" width="150" height="56" rx="10" fill="#fff" stroke="#2E8B57" stroke-width="2"/>
+  <text x="475" y="560" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">Skeleton</text>
+  <text x="475" y="578" text-anchor="middle" font-size="11" fill="#6b7a89">17 keypoints</text>
+
+  <!-- ===== Right: temporal + fusion + heads ===== -->
+  <rect x="1065" y="300" width="180" height="60" rx="10" fill="#fff" stroke="#6b7a89" stroke-width="2"/>
+  <text x="1155" y="324" text-anchor="middle" font-size="14.5" font-weight="600" fill="#13263a">Temporal Buffer</text>
+  <text x="1155" y="342" text-anchor="middle" font-size="11" fill="#6b7a89">48 frames window</text>
+
+  <!-- Dynamic Fusion (accent) -->
+  <rect x="1050" y="398" width="230" height="82" rx="12" fill="#FFF1E6" stroke="#E8843C" stroke-width="2.5"/>
+  <text x="1165" y="424" text-anchor="middle" font-size="15" font-weight="700" fill="#B5571A">Occlusion-aware</text>
+  <text x="1165" y="443" text-anchor="middle" font-size="15" font-weight="700" fill="#B5571A">Dynamic Fusion</text>
+  <text x="1165" y="463" text-anchor="middle" font-size="11" fill="#9a6438">Mask Gate · occ → task·region 가중</text>
+
+  <!-- Heads -->
+  <rect x="1332" y="298" width="160" height="40" rx="8" fill="#fff" stroke="#556" stroke-width="1.8"/>
+  <text x="1412" y="323" text-anchor="middle" font-size="13.5" font-weight="600" fill="#13263a">action</text>
+  <rect x="1332" y="347" width="160" height="40" rx="8" fill="#FFF6E6" stroke="#E8843C" stroke-width="2"/>
+  <text x="1412" y="372" text-anchor="middle" font-size="13.5" font-weight="700" fill="#B5571A">gaze</text>
+  <rect x="1332" y="396" width="160" height="40" rx="8" fill="#fff" stroke="#556" stroke-width="1.8"/>
+  <text x="1412" y="421" text-anchor="middle" font-size="13.5" font-weight="600" fill="#13263a">hands</text>
+  <rect x="1332" y="445" width="160" height="40" rx="8" fill="#fff" stroke="#556" stroke-width="1.8"/>
+  <text x="1412" y="470" text-anchor="middle" font-size="13.5" font-weight="600" fill="#13263a">talk</text>
+
+  <!-- Warning -->
+  <rect x="1332" y="520" width="160" height="60" rx="10" fill="#FDECEA" stroke="#C0392B" stroke-width="2"/>
+  <text x="1412" y="545" text-anchor="middle" font-size="14" font-weight="700" fill="#A93226">Warning</text>
+  <text x="1412" y="563" text-anchor="middle" font-size="11" fill="#b3554a">시각 + 음성(TTS)</text>
+
+  <!-- ===== Legend ===== -->
+  <line x1="205" y1="630" x2="243" y2="630" stroke="#2C3E50" stroke-width="2.2" marker-end="url(#arr)"/>
+  <text x="250" y="634" font-size="12" fill="#5b6b7b">데이터 흐름 (data flow)</text>
+  <line x1="445" y1="630" x2="483" y2="630" stroke="#D2691E" stroke-width="2.2" stroke-dasharray="7 4" marker-end="url(#arro)"/>
+  <text x="490" y="634" font-size="12" fill="#5b6b7b">차폐 조건·게이팅 (occlusion-conditional)</text>
+  <rect x="775" y="622" width="16" height="14" rx="3" fill="#FFF1E6" stroke="#E8843C" stroke-width="2"/>
+  <text x="798" y="634" font-size="12" fill="#5b6b7b">핵심 기여: 차폐 좌표 복원 + Occlusion-aware Dynamic Fusion</text>
+</svg>
