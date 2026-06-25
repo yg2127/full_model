@@ -67,9 +67,10 @@ model4_dms/
     └── notebooks/, outputs/(샘플)
 │   # classifier/ · landmark/ 코드를 그대로 재사용(중복 없음). 체크포인트는 models/MODELS.md
 │
-├── comparison/         # 비교군 — 외부 SOTA baseline 3종(SkateFormer/SDA-TR/PO-GUISE) 재구현
-│
-└── ablation/           # ablation study — occ 주입위치(AblationB)·gaze 보조실험·baseline 7종·bootstrap 통계검증
+└── experiments/        # 연구 검증(과정) — 코어와 분리
+    ├── comparison/     #   외부 SOTA baseline 3종(SkateFormer/SDA-TR/PO-GUISE) 재구현
+    ├── ablation/       #   occ 주입위치(AblationB)·gaze 보조실험·baseline 7종·bootstrap 통계검증
+    └── legacy/         #   구 model4 결과(superseded) — 최종본 OcclusionGateNet 으로 대체
 ```
 
 ## 파이프라인 (end-to-end)
@@ -148,10 +149,11 @@ face_frame + body_frame
 
 ### 비교군 · Ablation
 
-- [`comparison/`](comparison/) — 우리 모델과 동일 프로토콜로 재구현한 외부 SOTA 비교군 3종
+- [`experiments/comparison/`](experiments/comparison/) — 우리 모델과 동일 프로토콜로 재구현한 외부 SOTA 비교군 3종
   (SkateFormer, SDA-TR Spatiotemporal, PO-GUISE Pose-guided). occlusion 신호 미사용이 핵심 대비점.
-- [`ablation/`](ablation/) — occ 주입 위치 비교(`AblationB`), gaze 보조 ablation, baseline 7종(`Compare/`),
+- [`experiments/ablation/`](experiments/ablation/) — occ 주입 위치 비교(`AblationB`), gaze 보조 ablation, baseline 7종(`Compare/`),
   그리고 n=5000 부트스트랩 통계검증(`bootstrap_4545`/`bootstrap_toolkit`) + 통합 평가(`Eval_Ablation`).
+- [`experiments/legacy/`](experiments/legacy/) — 구 model4 결과(superseded). 최종본은 OcclusionGateNet(`full_system/`).
 
 두 폴더 모두 `classifier/` 의 V5 구조를 fork 한 실험 스냅샷이며, 체크포인트·대용량 예측 덤프는 미추적(요약 결과만 포함).
 
